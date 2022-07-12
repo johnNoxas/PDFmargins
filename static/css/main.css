@@ -1,0 +1,48 @@
+:root {
+  --main-bg-color: #ff8b94;
+  --dark-bg-color: #fc6f68;
+}
+
+.btn {
+    background-color: var(--main-bg-color);
+    border: 0;
+}
+
+.btn:hover {
+    background-color: var(--dark-bg-color);
+}
+
+body {
+    background-color: var(--main-bg-color);
+}
+
+form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; // optional this is only to get full height
+}
+
+.custom-file-button input[type=file] {
+  margin-left: -2px !important;
+}
+
+.custom-file-button input[type=file]::-webkit-file-upload-button {
+  display: none;
+}
+
+.custom-file-button input[type=file]::file-selector-button {
+  display: none;
+}
+
+.custom-file-button:hover label {
+  background-color: #dde0e3;
+  cursor: pointer;
+}
