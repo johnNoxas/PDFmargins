@@ -1,1 +1,4 @@
 runtime: python38
+
+env_variables:
+    CLOUD_STORAGE_BUCKET: pdf-uploads-355205

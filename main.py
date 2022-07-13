@@ -1,7 +1,11 @@
 import os
 import uuid
+import logging
+from typing import Union
 
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
+from google.cloud import storage
+
 from werkzeug.utils import secure_filename
 from PyPDF2 import PdfReader, PdfWriter, PdfMerger, PageObject
 
@@ -32,6 +36,16 @@ def download_file(name):
     return
 
 
+
+
+@app.errorhandler(500)
+def server_error(e: Union[Exception, int]) -> str:
+    logging.exception('An error occurred during a request.')
+    return """
+    An internal error occurred: <pre>{}</pre>
+    See logs for full stacktrace.
+    """.format(e), 500
+
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
@@ -39,15 +53,34 @@ def upload_file():
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
-        file = request.files['file']
-        filename = "{0}_{2}{1}".format(
-            *os.path.splitext(secure_filename(file.filename)) + (str(uuid.uuid4().clock_seq),))
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        # Create a Cloud Storage client.
+        gcs = storage.Client()
+
+        # Get the bucket that the file will be uploaded to.
+        bucket = gcs.get_bucket(CLOUD_STORAGE_BUCKET)
+
+        # Create a new blob and upload the file's content.
+        blob = bucket.blob(uploaded_file.filename)
+
+        blob.upload_from_string(
+            uploaded_file.read(),
+            content_type=uploaded_file.content_type
+        )
+
+        # Make the blob public. This is not necessary if the
+        # entire bucket is public.
+        # See https://cloud.google.com/storage/docs/access-control/making-data-public.
+        blob.make_public()
+
+        # The public URL can be used to directly access the uploaded file via HTTP.
+        # return blob.public_url
+
+        #TODO: replace file. with blob. ???
+
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if file.filename == '':
             flash('No selected file')
-            print('sex')
             return redirect(request.url)
         if file and allowed_file(file.filename):
             left_margin, right_margin, top_margin, bottom_margin = \
@@ -71,5 +104,4 @@ def upload_file():
 if __name__ == "__main__":
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'
-
     app.run(host="127.0.0.1", port=8080, debug=True)
